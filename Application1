@@ -1,4 +1,4 @@
-/*Application 1: Q1*/
+/*Application 1: Q1 and Q2*/
 
 FILENAME REFFILE '/folders/myfolders/StatsProgramming/Assignment 3/SalesOct.xlsx';
 PROC IMPORT DATAFILE=REFFILE DBMS=XLSX OUT=WORK.sales;GETNAMES=YES;RUN;
