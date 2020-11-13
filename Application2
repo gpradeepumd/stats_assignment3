@@ -1,0 +1,55 @@
+libname stats '/folders/myfolders/StatsProgramming/Assignment 3';
+
+data adsin2018;            
+set stats.ad2018;  
+
+data adsin2019;            
+set stats.ad2019;
+
+proc means data=work.adsin2018 sum noprint;
+class state;
+var spending;
+output out = work.adsfinal2018 sum=Adspend_Allmonths_2018;
+run;
+
+proc means data=work.adsin2019 sum noprint;
+class statename;
+var spending;
+output out = work.adsfinal2019 sum=Adspend_Allmonths_2019;
+run;
+
+data work.adsfinal2018;
+     set work.adsfinal2018;
+if _TYPE_ =0 then delete;
+Months_Adv_in_2018 = _FREQ_;
+run;
+
+data work.adsfinal2019;
+     set work.adsfinal2019;
+if _TYPE_ =0 then delete;
+Months_Adv_in_2019 = _FREQ_;
+state = statename;
+run;
+
+proc sort data= work.adsfinal2018;by state; run;
+proc sort data = work.adsfinal2019;by state; run;
+
+data work.adsfinal;
+merge adsfinal2018 (in=in2018) adsfinal2019 (in=in2019);
+by state;
+if in2018=1 or in2019=1;
+drop _TYPE_;drop _FREQ_;
+Adspend_Difference = Adspend_allmonths_2018 - Adspend_allmonths_2019;
+run;
+
+proc print data = adsfinal;
+var state;
+where (Months_Adv_in_2018 =12 and Months_Adv_in_2019=12 );
+title "States which advertised every month in the two years";
+run;
+
+proc print data = adsfinal;
+var state;
+where (Adspend_difference >0 );
+title "States which recived less advertsing spend in 2019 than 2018";
+run;
