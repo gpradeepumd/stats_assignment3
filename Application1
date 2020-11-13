@@ -1,0 +1,52 @@
+/*Application 1: Q1*/
+
+FILENAME REFFILE '/folders/myfolders/StatsProgramming/Assignment 3/SalesOct.xlsx';
+PROC IMPORT DATAFILE=REFFILE DBMS=XLSX OUT=WORK.sales;GETNAMES=YES;RUN;
+
+FILENAME REFFILE '/folders/myfolders/StatsProgramming/Assignment 3/ReturnsOct.xlsx';
+PROC IMPORT DATAFILE=REFFILE DBMS=XLSX OUT=WORK.returns; GETNAMES=YES;RUN;
+
+
+/*Remove all the entries that has the September month in Returns data*/
+data work.returns;
+     set work.returns;
+if substr(transactionid,1,2) = '9_' then delete;
+run;
+
+proc means data = work.returns sum;
+class storeid;
+output out=returnbystore sum=sum;
+run;
+
+proc means data = work.sales sum;
+class storeid;
+output out=salesbystore sum=sum;
+run;
+
+data work.salesbystore;
+     set work.salesbystore;
+if storeid=. then delete;
+sumbystores = sum;
+transactions_per_store= _FREQ_;
+run;
+
+data work.returnbystore;
+     set work.returnbystore;
+if storeid=. then delete;
+returnbystores = sum;
+returns_per_store = _FREQ_;
+run;
+
+
+proc sort data= work.salesbystore;by storeid; run;
+proc sort data = work.returnbystore;by storeid; run;
+
+data work.final;
+merge salesbystore (in=insales) returnbystore (in=inreturn);
+by storeid;
+if insales=1 or inreturn=1;
+if returnbystores=. then returnbystores=0;
+if returns_per_store=. then returns_per_store=0;
+salesafterrefund = sumbystores - returnbystores;
+returnrate = ((returns_per_store/transactions_per_store)*100);
+run;
