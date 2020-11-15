@@ -1,4 +1,4 @@
-/*Application 1: Q1 and Q2*/
+/*Application 1: Q1*/
 
 FILENAME REFFILE '/folders/myfolders/StatsProgramming/Assignment 3/SalesOct.xlsx';
 PROC IMPORT DATAFILE=REFFILE DBMS=XLSX OUT=WORK.sales;GETNAMES=YES;RUN;
@@ -13,27 +13,25 @@ data work.returns;
 if substr(transactionid,1,2) = '9_' then delete;
 run;
 
-proc means data = work.returns sum;
+proc means data = work.returns sum noprint;
 class storeid;
-output out=returnbystore sum=sum;
+output out=returnbystore sum=returnbystores;
 run;
 
-proc means data = work.sales sum;
+proc means data = work.sales sum noprint;
 class storeid;
-output out=salesbystore sum=sum;
+output out=salesbystore sum=sumbystores;
 run;
 
 data work.salesbystore;
      set work.salesbystore;
 if storeid=. then delete;
-sumbystores = sum;
 transactions_per_store= _FREQ_;
 run;
 
 data work.returnbystore;
      set work.returnbystore;
 if storeid=. then delete;
-returnbystores = sum;
 returns_per_store = _FREQ_;
 run;
 
@@ -49,4 +47,20 @@ if returnbystores=. then returnbystores=0;
 if returns_per_store=. then returns_per_store=0;
 salesafterrefund = sumbystores - returnbystores;
 returnrate = ((returns_per_store/transactions_per_store)*100);
+run;
+
+
+proc sort data = work.final;
+by descending salesafterrefund;
+run;
+
+proc print data=final (obs=1);
+title "Store with highest revenue after refund in October";
+run;
+
+
+proc print data=final;
+var storeid;
+where (returnrate >10);
+title "Stores that has a return rate of greater than 10%";
 run;
