@@ -48,7 +48,7 @@ where (Months_Adv_in_2018 =12 and Months_Adv_in_2019=12 );
 title "States which advertised every month in the two years";
 run;
 
-proc print data = adsfinal;
+proc print data = adsfinal N;
 var state;
 where (Adspend_difference >0 );
 title "States which recived less advertsing spend in 2019 than 2018";
