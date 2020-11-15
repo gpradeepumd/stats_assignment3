@@ -1,0 +1,122 @@
+libname retail '/folders/myfolders/StatsProgramming/Assignment 3';
+
+data retailprice; set retail.price;
+data retailsales; set retail.sales;
+data retaillocation; set retail.storelocation;
+     
+data retailsalesprod1;
+     set retail.sales;
+if (productline = 2) then delete;
+run;
+
+data retailsalesprod2;
+     set retail.sales;
+if (productline = 1) then delete;
+run;
+
+
+data retailpriceprod1;
+     set retail.price;
+if (productline = 2) then delete;
+run;
+
+data retailpriceprod2;
+     set retail.price;
+if (productline = 1) then delete;
+run;
+
+ /* Calculate the sales of Standing Desk */
+proc sort data= work.retailsalesprod1; by storeid; run;
+proc sort data = work.retaillocation; by storeid; run;
+
+data work.revenuedesk;
+merge retailsalesprod1 retaillocation;
+by storeid;
+run;
+
+proc sort data= work.revenuedesk; by stateid; run;
+proc sort data = work.retailpriceprod1; by stateid; run;
+
+data work.revenuedesk;
+     set work.revenuedesk;
+merge revenuedesk retailpriceprod1;
+by stateid;
+price_desk = price;
+Revenue_Desk= price_desk*quantity;
+run;
+
+proc means data=work.revenuedesk sum noprint;
+class state;
+var revenue_desk;
+output out=revenuedeskfinal sum=revenue_desks_bystate;
+run;
+
+ /* Calculate the sales of Office Chair */
+proc sort data= work.retailsalesprod2; by storeid; run;
+proc sort data = work.retaillocation; by storeid; run;
+
+data work.revenuechair;
+merge retailsalesprod2 retaillocation;
+by storeid;
+run;
+
+proc sort data= work.revenuechair; by stateid; run;
+proc sort data = work.retailpriceprod2; by stateid; run;
+
+data work.revenuechair;
+     set work.revenuechair;
+merge revenuechair retailpriceprod2;
+by stateid;
+price_chair = price;
+Revenue_Chair= price_chair*quantity;
+run;
+
+proc means data=work.revenuechair sum noprint;
+class state;
+var revenue_chair;
+output out=revenuechairfinal sum=revenue_chairs_bystate;
+run;
+
+proc sort data= work.revenuedesk; by storeid; run;
+proc sort data = work.revenuechair; by storeid; run;
+
+data work.revenueoverall;
+     set work.revenuedesk;
+merge revenuedesk revenuechair;
+by storeid;
+drop price; drop productline;
+high_revenue = revenue_chair - revenue_desk;
+run;
+
+/* Display the output in the Results Tab for Standing Desks and Office Chairs */
+data work.revenuedeskfinal;
+     set work.revenuedeskfinal;
+if _TYPE_=0 then delete;
+run;
+
+proc sort data = work.revenuedeskfinal;
+by descending revenue_desks_bystate;
+run;
+
+proc print data=work.revenuedeskfinal (obs=4);
+title "Standing Desks overall revenue by state";
+run;
+
+data work.revenuechairfinal;
+     set work.revenuechairfinal;
+if _TYPE_=0 then delete;
+run;
+
+proc sort data = work.revenuechairfinal;
+by descending revenue_chairs_bystate;
+run;
+
+proc print data=work.revenuechairfinal (obs=4);
+title "Offic Chair overall revenue by state";
+run;
+
+proc print data = revenueoverall N;
+var high_revenue;
+where (high_revenue>0);
+title "Stores which have high revenue from selling office chairs than standing desks";
+run;
